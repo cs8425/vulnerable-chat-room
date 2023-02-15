@@ -1,0 +1,16 @@
+{
+    "name": "simple-chatroom-test",
+    "version": "1.0.0",
+    "description": "A simple chatroom using Preact.js and esbuild. do NOT use in production",
+    "dependencies": {
+        "preact": "^10.12.1"
+    },
+    "devDependencies": {
+        "esbuild": "0.17.8",
+        "serve-handler": "^6.1.5"
+    },
+    "scripts": {
+        "build": "node esbuild.js",
+        "dev": "node esbuild-dev.mjs"
+    }
+}
