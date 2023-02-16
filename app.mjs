@@ -1,8 +1,9 @@
 import { readFileSync } from 'fs';
 import { parse } from 'url';
 import { createServer } from 'http';
-import { WebSocketServer } from 'ws';
+import WebSocket, { WebSocketServer } from 'ws';
 import hanlder from 'serve-handler';
+import { time } from 'console';
 
 const config = {
 	skipGz: true,
@@ -22,11 +23,6 @@ const server = createServer({
 server.on('request', (req, res) => {
 	console.log('[req]', req.url, req.socket.remoteAddress, req.headers);
 	if (config.skipGz) delete req.headers['accept-encoding']; // skip gz
-
-	// res.writeHead(200, { 'Content-Type': 'application/json' });
-	// res.end(JSON.stringify({
-	// 	data: 'Hello World!',
-	// }));
 
 	// ffmpeg-wasm
 	res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
@@ -56,10 +52,41 @@ wss.on('connection', (ws, req) => {
 	ws.on('error', console.error);
 
 	ws.on('message', (data, isBinary) => {
-		console.log('received: %s', data);
+		console.log('[recv]', req.socket.remoteAddress, data.toString());
+		const msgObj = parseJSON(data.toString());
+		if (!msgObj) return; // skip
+		msgObj['t'] = Date.now();
+		const out = JSON.stringify(msgObj);
+
+		wss.clients.forEach((client) => {
+			if (client.readyState === WebSocket.OPEN) {
+				// client.send(data, { binary: isBinary });
+				client.send(out);
+			}
+		});
 	});
 
-	ws.send('something');
+	// ws.send('something');
 });
 
+function sendTime() {
+	wss.clients.forEach((client) => {
+		const now = Date.now();
+		if (client.readyState === WebSocket.OPEN) {
+			client.send(`${now}`);
+		}
+	});
+	const t = setTimeout(sendTime, 10 * 1000);
+}
+// sendTime();
+
 server.listen(8000);
+
+function parseJSON(str) {
+	try {
+		return JSON.parse(str);
+	}
+	catch (e) {
+		return null;
+	}
+}
