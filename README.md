@@ -1,4 +1,4 @@
-# simple chatroom
+# simple and vulnerable chat room
 # **!!! do NOT use in production !!!**
 # **!!! "不要"在正式環境裡使用 !!!**
 
