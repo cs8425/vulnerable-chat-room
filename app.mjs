@@ -53,7 +53,7 @@ wss.on('connection', (ws, req) => {
 
 	ws.on('message', (data, isBinary) => {
 		console.log('[recv]', req.socket.remoteAddress, data.toString());
-		const msgObj = parseJSON(data.toString());
+		const msgObj = msgFilter(data.toString());
 		if (!msgObj) return; // skip
 		msgObj['t'] = Date.now();
 		const out = JSON.stringify(msgObj);
@@ -89,4 +89,24 @@ function parseJSON(str) {
 	catch (e) {
 		return null;
 	}
+}
+
+function msgFilter(data) {
+	const msgObj = parseJSON(data);
+	if (!msgObj) return null;
+	const {
+		name = '',
+		msg = '',
+	} = msgObj;
+	if (name.length == 0) return null;
+	if (msg.length == 0) return null;
+
+	// console.log('[filter]', name.length, name);
+	const illegalName = name.match(/(adm[Iil1]n.*|r[Oo0][Oo0]t.*)+$/ig);
+	if (!!illegalName) return null;
+
+	return {
+		name,
+		msg,
+	};
 }

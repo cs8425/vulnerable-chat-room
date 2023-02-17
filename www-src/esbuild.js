@@ -7,7 +7,8 @@ esbuild.build({
 	entryPoints: ['src/app.js'],
 	bundle: true,
 	minify: true,
-	pure: ['console.log'], // remove debug log
+	// disable for the goal of this project
+	// pure: ['console.log'], // remove debug log
 	sourcemap: false,
 	sourcesContent: false,
 	target: [
