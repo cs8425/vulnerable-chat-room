@@ -15,7 +15,8 @@ esbuild.build({
 		'es2015',
 	],
 	// publicPath: 'res/',
-	outdir: './dist',
+	// outdir: './dist',
+	outdir: '../www',
 	loader: {
 		'.js': 'jsx',
 		'.png': 'file',

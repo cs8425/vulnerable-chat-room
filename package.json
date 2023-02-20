@@ -1,8 +1,14 @@
 {
-  "dependencies": {
-    "serve-handler": "^6.1.5",
-    "sqlite": "^4.1.2",
-    "sqlite3": "^5.1.4",
-    "ws": "^8.12.1"
-  }
+    "name": "vulnerable-chat-room",
+    "version": "1.0.0",
+    "description": "A simple and vulnerable chat room using Preact.js and esbuild. do NOT use in production",
+    "dependencies": {
+      "serve-handler": "^6.1.5",
+      "sqlite": "^4.1.2",
+      "sqlite3": "^5.1.4",
+      "ws": "^8.12.1"
+    },
+    "scripts": {
+        "start": "node app.mjs"
+    }
 }
