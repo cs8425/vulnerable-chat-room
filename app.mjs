@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
 import { parse } from 'url';
-import { createServer } from 'http';
+import { createServer } from 'node:http';
+import { createSecureServer, constants as h2constants } from 'node:http2';
 import WebSocket, { WebSocketServer } from 'ws';
 import hanlder from 'serve-handler';
 
@@ -13,6 +14,10 @@ import {
 const config = {
 	skipGz: true,
 	dbPath: './db.sqlite',
+
+	useHttps: false,
+	cert: './cert/server.crt',
+	key: './cert/server.key',
 };
 
 const db = await openDb(config.dbPath);
@@ -39,9 +44,22 @@ const fileHanlder = (req, res) => hanlder(req, res, {
 	directoryListing: false,
 });
 
-const server = createServer({
-	// cert: readFileSync('/path/to/server.crt'),
-	// key: readFileSync('/path/to/server.key'),
+const createServerFn = (config.useHttps) ? createSecureServer : createServer;
+const server = createServerFn({
+	cert: readFileSync(config.cert),
+	key: readFileSync(config.key),
+	allowHTTP1: true,
+});
+
+const {
+	HTTP2_HEADER_METHOD,
+	HTTP2_HEADER_PATH,
+} = h2constants;
+
+server.on('stream', (stream, headers, flags, rawHeaders) => {
+	const method = headers[HTTP2_HEADER_METHOD];
+	const path = headers[HTTP2_HEADER_PATH];
+	console.log('[h2][req]', method, path, stream.session.socket.remoteAddress, headers);
 });
 
 server.on('request', (req, res) => {

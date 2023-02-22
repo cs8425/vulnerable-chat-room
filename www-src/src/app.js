@@ -11,12 +11,13 @@ function App() {
 	const [count, setCount] = useState(0);
 	const msgRef = useRef(null);
 	const nameRef = useRef(null);
+	const https = location.protocol === 'https:';
 	const {
 		sendMsg,
 		lastMsg,
 		readyState,
 		getWebSocket,
-	} = useWs(`ws://${location.host}/ws`);
+	} = useWs(`${(https) ? 'wss' : 'ws'}://${location.host}/ws`);
 
 	const send = (e) => {
 		console.log('[send]', e, nameRef.current?.value, msgRef.current?.value);
