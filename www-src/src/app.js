@@ -1,23 +1,51 @@
 import { h, Fragment, render } from 'preact';
 import { useState, useRef, useEffect } from 'preact/hooks';
 
-import { useWs } from './ws.js';
+import {
+	useWs,
+	ReadyState,
+} from './ws.js';
+
+import {
+	MsgLog,
+} from './MsgLog.jsx';
 
 // import css
 import './bulma.min.css';
 import './all.min.css';
 
 function App() {
-	const [count, setCount] = useState(0);
 	const msgRef = useRef(null);
 	const nameRef = useRef(null);
 	const https = location.protocol === 'https:';
+	const [wsURL, setWsURL] = useState(`${(https) ? 'wss' : 'ws'}://${location.host}/ws`);
 	const {
 		sendMsg,
 		lastMsg,
 		readyState,
 		getWebSocket,
-	} = useWs(`${(https) ? 'wss' : 'ws'}://${location.host}/ws`);
+	} = useWs(wsURL);
+
+	const state2btn = {
+		[ReadyState.CONNECTING]: ['connecting', true, ''],
+		[ReadyState.OPEN]: ['connected', false, 'close'],
+		[ReadyState.CLOSING]: ['closing', true, ''],
+		[ReadyState.CLOSED]: ['closed', false, 'connect'],
+	};
+	const connBtnFn = (e) => {
+		switch (readyState) {
+			case ReadyState.CLOSED:
+				const wsURL0 = wsURL;
+				setWsURL(null);
+				setTimeout(() => {
+					setWsURL(wsURL0);
+				}, 100);
+				break;
+			case ReadyState.OPEN:
+				getWebSocket()?.close();
+				break;
+		}
+	};
 
 	const send = (e) => {
 		console.log('[send]', e, nameRef.current?.value, msgRef.current?.value);
@@ -48,17 +76,18 @@ function App() {
 				<p class="subtitle">
 					chat room for <strong>test</strong> only!
 				</p>
-
-				<button class="button is-medium" onClick={() => setCount(count + 1)}>
-					<span class="icon">
-						<i class="fab fa-github"></i>
-					</span>
-					<span>GitHub click:{count}</span>
-				</button>
 				<hr />
 
-				<div>
-					state: {readyState}
+				<div class="field has-addons">
+					<p class="control">
+						<a class="button is-static">state</a>
+					</p>
+					<div class="control">
+						<input class="input" type="text" value={state2btn[readyState][0]} readOnly />
+					</div>
+					<div class="control">
+						<a class={`button is-info ${(state2btn[readyState][1]) ? 'is-loading' : ''}`} onClick={connBtnFn}>{state2btn[readyState][2]}</a>
+					</div>
 				</div>
 				<div class="field has-addons">
 					<div class="control">
@@ -85,9 +114,12 @@ function App() {
 						>send</button>
 					</div>
 				</div>
-				<div>
-					raw msg: {lastMsg?.data}
-				</div>
+				<article class="message">
+					<div class="message-header">
+						<p>raw msg</p>
+					</div>
+					<div class="message-body">{lastMsg?.data}</div>
+				</article>
 				<hr />
 				<MsgLog lastMsg={lastMsg} />
 
@@ -97,50 +129,3 @@ function App() {
 }
 
 render(h(App), document.getElementById('app'));
-
-function MsgLog(props) {
-	const {
-		lastMsg,
-	} = props;
-	const [_, update] = useState(0);
-	const history = useRef((lastMsg !== null) ? [lastMsg] : []);
-	useEffect(() => {
-		if (lastMsg !== null) {
-			const msgObj = JSON.parse(lastMsg.data);
-			history.current.unshift(msgObj);
-			update((v) => v + 1);
-		}
-	}, [lastMsg]);
-
-	const ele = history.current?.map((v, i) => {
-		// return (<p>{v}</p>);
-		return (<MsgBox msg={v.msg} user={v.name} time={v.t} />);
-	});
-	return (<div>
-		{ele}
-	</div>);
-}
-
-function MsgBox(props) {
-	const {
-		user,
-		msg,
-		time,
-	} = props;
-	const eleRef = useRef(null);
-	useEffect(() => {
-		if (!eleRef.current) return;
-		// eleRef.current.innerHTML = `${user}: ${msg} @${(new Date(time)).toLocaleTimeString()}`;
-		eleRef.current.innerHTML = `${msg}`;
-	}, [
-		eleRef.current,
-		user,
-		msg,
-		time,
-	]);
-	return (<div class="columns" style="border-top-style: solid;border-top-width: 1px;border-top-color: #aaa;">
-		<div class="column is-1">{user}</div>
-		<div class="column" ref={eleRef}></div>
-		<div class="column is-1">{(new Date(time)).toLocaleTimeString()}</div>
-	</div>);
-}
