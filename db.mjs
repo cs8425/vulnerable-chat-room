@@ -42,15 +42,15 @@ const saveLog = async (db, msgObj) => {
 	try {
 		await db.exec(`
 INSERT INTO chat_log (
-	ts,
-	ip,
 	name,
-	msg
+	msg,
+	ts,
+	ip
 ) VALUES (
-	${msgObj.t},
-	'${msgObj.ip}',
 	'${msgObj.name}',
-	'${msgObj.msg}'
+	'${msgObj.msg}',
+	${msgObj.t},
+	'${msgObj.ip}'
 );`);
 	}
 	catch (e) {
@@ -67,6 +67,7 @@ const sendLog = async (db, rowFn) => {
 		await db.each(`
 WITH log AS (
 	SELECT
+		id,
 		ts,
 		ip,
 		name,
@@ -89,6 +90,7 @@ SELECT * FROM log ORDER BY ts ASC;`, (err, row) => {
 				name: row.name,
 				msg: row.msg,
 				t: row.ts,
+				id: row.id,
 			});
 		});
 	}
