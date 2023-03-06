@@ -44,12 +44,11 @@ const fileHanlder = (req, res) => hanlder(req, res, {
 	directoryListing: false,
 });
 
-const createServerFn = (config.useHttps) ? createSecureServer : createServer;
-const server = createServerFn({
+const server = (config.useHttps) ? createSecureServer({
 	cert: readFileSync(config.cert),
 	key: readFileSync(config.key),
 	allowHTTP1: true,
-});
+}) : createServer({});
 
 const {
 	HTTP2_HEADER_METHOD,
